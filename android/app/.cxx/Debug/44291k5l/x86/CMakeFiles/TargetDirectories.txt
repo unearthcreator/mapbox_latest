@@ -1,0 +1,2 @@
+C:/Users/marti/Desktop/sista22linkan-master/android/app/.cxx/Debug/44291k5l/x86/CMakeFiles/edit_cache.dir
+C:/Users/marti/Desktop/sista22linkan-master/android/app/.cxx/Debug/44291k5l/x86/CMakeFiles/rebuild_cache.dir
