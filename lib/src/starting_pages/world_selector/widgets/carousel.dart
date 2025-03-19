@@ -134,7 +134,7 @@ class _CarouselWidgetState extends State<CarouselWidget> {
     );
   }
 
-   WorldConfig? _findWorldForIndex(int idx) {
+  WorldConfig? _findWorldForIndex(int idx) {
     for (final w in widget.worldConfigs) {
       if (w.carouselIndex == idx) return w;
     }
@@ -145,12 +145,24 @@ class _CarouselWidgetState extends State<CarouselWidget> {
     if (world == null) return 'assets/earth_snapshot/default.png';
     final mapType = world.mapType.toLowerCase();
     final theme = world.manualTheme?.toLowerCase() ?? 'day';
-    final path = mapType == 'satellite'
-        ? 'assets/earth_snapshot/Satellite-${theme[0].toUpperCase()}${theme.substring(1)}.png'
-        : 'assets/earth_snapshot/${theme[0].toUpperCase()}${theme.substring(1)}.png';
-    logger.d('Image path resolved: $path');
-    return path;
+    if (world.isFlatMap) {
+      if (mapType == 'satellite') {
+        // For satellite flat maps, use the flatmap-Satellite prefix with a capitalized theme.
+        return 'assets/earth_snapshot/flatmap-Satellite-${theme[0].toUpperCase()}${theme.substring(1)}.png';
+      } else {
+        // For standard flat maps, if theme is "dusk" or "night", use lowercase; otherwise, capitalize.
+        final fileTheme = (theme == 'dusk' || theme == 'night')
+            ? theme
+            : '${theme[0].toUpperCase()}${theme.substring(1)}';
+        return 'assets/earth_snapshot/flatmap-$fileTheme.png';
+      }
+    } else {
+      // Globe images remain as before.
+      if (mapType == 'satellite') {
+        return 'assets/earth_snapshot/Satellite-${theme[0].toUpperCase()}${theme.substring(1)}.png';
+      } else {
+        return 'assets/earth_snapshot/${theme[0].toUpperCase()}${theme.substring(1)}.png';
+      }
+    }
   }
 }
-
-

@@ -19,6 +19,9 @@ class WorldConfig {
 
   /// Which carousel index this world is associated with.
   final int carouselIndex;
+  
+  /// Indicates whether the user selected a flat map.
+  final bool isFlatMap;
 
   WorldConfig({
     required this.id,
@@ -27,6 +30,7 @@ class WorldConfig {
     required this.timeMode,   // "auto" or "manual"
     this.manualTheme,         // only relevant if timeMode == "manual"
     required this.carouselIndex,
+    required this.isFlatMap,
   });
 
   /// Factory method to create a default `WorldConfig` for a given index.
@@ -38,6 +42,7 @@ class WorldConfig {
       timeMode: 'auto',             // Default time mode
       manualTheme: null,            // No manual theme in "auto" mode
       carouselIndex: index,         // The given index for the carousel
+      isFlatMap: false,             // Default is globe view
     );
   }
 
@@ -50,6 +55,7 @@ class WorldConfig {
       'timeMode': timeMode,
       'manualTheme': manualTheme,
       'carouselIndex': carouselIndex,
+      'isFlatMap': isFlatMap,
     };
   }
 
@@ -62,6 +68,7 @@ class WorldConfig {
       timeMode: json['timeMode'] as String,
       manualTheme: json['manualTheme'] as String?,
       carouselIndex: json['carouselIndex'] as int,
+      isFlatMap: json['isFlatMap'] as bool? ?? false,
     );
   }
 
@@ -73,7 +80,8 @@ class WorldConfig {
            'mapType: $mapType, '
            'timeMode: $timeMode, '
            'manualTheme: $manualTheme, '
-           'carouselIndex: $carouselIndex'
+           'carouselIndex: $carouselIndex, '
+           'isFlatMap: $isFlatMap'
            ')';
   }
 }

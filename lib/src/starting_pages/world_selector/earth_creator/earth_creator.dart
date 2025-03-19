@@ -97,6 +97,7 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
       timeMode: timeMode,
       manualTheme: manualTheme,
       carouselIndex: widget.carouselIndex,
+      isFlatMap: _isFlatMap, // Passing the flat map flag here.
     );
 
     try {
@@ -181,8 +182,7 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
             ),
             if (!_adjustAfterTime)
               Positioned(
-                // Dropdown position shifted to avoid overlapping the toggles.
-                top: 195.0, 
+                top: 195.0,
                 right: 16.0,
                 child: ThemeDropdown(
                   selectedTheme: _selectedTheme,
