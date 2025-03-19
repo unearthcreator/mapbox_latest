@@ -23,7 +23,7 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
   final TextEditingController _nameController = TextEditingController();
   bool _isSatellite = false;
   bool _adjustAfterTime = false;
-  bool _isFlatMap = false; // New state variable for flat vs. globe view.
+  bool _isFlatMap = false; // State variable for flat vs. globe view.
   String _selectedTheme = 'Day';
 
   late LocalWorldsRepository _worldConfigsRepo;
@@ -54,11 +54,22 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
   }
 
   String get _themeImagePath {
-    // If flat map is selected, use the flat map image.
-    if (_isFlatMap) {
-      return 'assets/earth_snapshot/flatmap-Satellite-Dawn.png';
-    }
     final bracket = _currentBracket;
+    if (_isFlatMap) {
+      // For flat maps, use flatmap- prefix.
+      if (_isSatellite) {
+        // Satellite flat maps follow the naming: flatmap-Satellite-Dawn.png, etc.
+        return 'assets/earth_snapshot/flatmap-Satellite-$bracket.png';
+      } else {
+        // For non-satellite flat maps, the assets are named with "Dawn" and "Day" as-is,
+        // but for "Dusk" and "Night" the filenames are lowercase.
+        final fileBracket = (bracket == 'Dusk' || bracket == 'Night')
+            ? bracket.toLowerCase()
+            : bracket;
+        return 'assets/earth_snapshot/flatmap-$fileBracket.png';
+      }
+    }
+    // For globe images, the logic remains unchanged.
     return _isSatellite
         ? 'assets/earth_snapshot/Satellite-$bracket.png'
         : 'assets/earth_snapshot/$bracket.png';
@@ -138,7 +149,7 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // New toggle for Globe vs. Flat map
+                  // Toggle for Globe vs. Flat map
                   ToggleRow(
                     label: _isFlatMap ? 'Flat' : 'Globe',
                     value: _isFlatMap,
@@ -170,7 +181,7 @@ class _EarthCreatorPageState extends State<EarthCreatorPage> {
             ),
             if (!_adjustAfterTime)
               Positioned(
-                // Shifted down to avoid overlap with the new toggle
+                // Dropdown position shifted to avoid overlapping the toggles.
                 top: 195.0, 
                 right: 16.0,
                 child: ThemeDropdown(
