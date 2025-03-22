@@ -20,7 +20,7 @@ import 'package:map_mvp_project/src/earth_map/utils/connect_banner.dart';
 import 'package:map_mvp_project/src/earth_map/annotations/annotation_menu.dart';
 import 'package:map_mvp_project/src/earth_map/dialogs/annotation_dialog_flow.dart';
 import 'package:map_mvp_project/src/earth_map/annotations/annotation_actions.dart';
-import 'package:map_mvp_project/services/geocoding_service.dart'; // <--- ensure you can call fetchShortAddress
+import 'package:map_mvp_project/services/geocoding_service.dart'; // for fetchShortAddress
 
 /// The main EarthMapPage, which sets up the map, annotations, and various UI widgets.
 class EarthMapPage extends StatefulWidget {
@@ -72,6 +72,17 @@ class EarthMapPageState extends State<EarthMapPage> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  // ---------------------------------------------------------------------
+  // Helper function to determine the style URI based on user preferences.
+  // For now, it logs the preferences and returns a default style URI.
+  // Later, you can update it to choose a style based on mapType, timeMode, etc.
+  String _determineGlobeStyleUri() {
+    final config = widget.worldConfig;
+    logger.i("User preferences - isFlatMap: ${config.isFlatMap}, mapType: ${config.mapType}, timeMode: ${config.timeMode}, manualTheme: ${config.manualTheme}");
+    // For now, just return the default style URI for Earth (globe).
+    return MapConfig.styleUriEarth;
   }
 
   // ---------------------------------------------------------------------
@@ -342,6 +353,8 @@ class EarthMapPageState extends State<EarthMapPage> {
   //                            UI BUILDERS
   // ---------------------------------------------------------------------
   Widget _buildMapWidget() {
+    final styleUri = _determineGlobeStyleUri();
+    logger.i("Using style URI: $styleUri");
     return GestureDetector(
       onLongPressStart: _handleLongPress,
       onLongPressMoveUpdate: _handleLongPressMoveUpdate,
@@ -354,7 +367,7 @@ class EarthMapPageState extends State<EarthMapPage> {
       },
       child: MapWidget(
         cameraOptions: MapConfig.defaultCameraOptions,
-        styleUri: MapConfig.styleUriEarth,
+        styleUri: styleUri,
         onMapCreated: _onMapCreated,
         onCameraChangeListener: _onCameraChangeListener,
       ),
