@@ -8,11 +8,15 @@ class MapConfig {
   static const String styleUriEarth = 
       "https://api.mapbox.com/styles/v1/unearthcreator/cm2jwm74e004j01ny7osa5ve8?access_token=pk.eyJ1IjoidW5lYXJ0aGNyZWF0b3IiLCJhIjoiY20yam4yODlrMDVwbzJrcjE5cW9vcDJmbiJ9.L2tmRAkt0jKLd8-fWaMWfA";
 
-  /// Style for the "Default Globe" or the new globe style you want in EarthCreator
+  /// Style for the "Default Globe" or the new globe style you want in EarthCreator.
   static const String styleUriGlobe = 
       "mapbox://styles/unearthcreator/cm59tvj11000t01sc8z2c3k0x";
 
-  /// Default camera options, focusing on a wide area (zoom 1, near center of US)
+  /// New style URI for a standard globe with manual "Day" preference.
+  static const String styleUriGlobeStandardDay =
+      "mapbox://styles/unearthcreator/cm8kk457f018c01se2j7mfnlf";
+
+  /// Default camera options, focusing on a wide area (zoom 1, near center of US).
   static CameraOptions defaultCameraOptions = CameraOptions(
     center: Point(coordinates: Position(-98.0, 39.5)),
     zoom: 1.0,

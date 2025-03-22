@@ -76,12 +76,26 @@ class EarthMapPageState extends State<EarthMapPage> {
 
   // ---------------------------------------------------------------------
   // Helper function to determine the style URI based on user preferences.
-  // For now, it logs the preferences and returns a default style URI.
-  // Later, you can update it to choose a style based on mapType, timeMode, etc.
+  // Now, if the user saved a globe with manual mode and "Day" for standard map type,
+  // it returns the new style URI.
   String _determineGlobeStyleUri() {
     final config = widget.worldConfig;
     logger.i("User preferences - isFlatMap: ${config.isFlatMap}, mapType: ${config.mapType}, timeMode: ${config.timeMode}, manualTheme: ${config.manualTheme}");
-    // For now, just return the default style URI for Earth (globe).
+    
+    // Handle globe cases (when isFlatMap is false)
+    if (!config.isFlatMap) {
+      if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
+        final theme = config.manualTheme!.toLowerCase();
+        if (config.mapType.toLowerCase() == 'standard') {
+          if (theme == 'day') {
+            return MapConfig.styleUriGlobeStandardDay;
+          }
+          // You could add additional conditions for dawn, dusk, night here.
+        }
+        // You can add satellite conditions here as well.
+      }
+    }
+    // Fallback: return the default style for Earth.
     return MapConfig.styleUriEarth;
   }
 
@@ -126,11 +140,7 @@ class EarthMapPageState extends State<EarthMapPage> {
         onDragEnd: _handleDragEnd,
         onAnnotationRemoved: _handleAnnotationRemoved,
         onConnectModeDisabled: () => setState(() => _isConnectMode = false),
-
-        // Called if user long-presses an empty spot
         onPlacementDialogRequested: _handlePlacementDialogRequest,
-
-        // Called if user reverts the annotation
         onAnnotationReverted: _handleAnnotationReverted,
       );
 
@@ -263,26 +273,18 @@ class EarthMapPageState extends State<EarthMapPage> {
   // ---------------------------------------------------------------------
   Future<void> _handlePlacementDialogRequest(Point pressPoint) async {
     logger.i('EarthMapPage received a placement dialog request at $pressPoint');
-
-    // 1) Retrieve lat/lng from the pressPoint
     final lat = pressPoint.coordinates.lat.toDouble();
     final lng = pressPoint.coordinates.lng.toDouble();
-
-    // 2) Reverse geocode the short address
     final shortAddr = await GeocodingService.fetchShortAddress(lat, lng);
     logger.i('Short address for lat=$lat, lng=$lng => $shortAddr');
-
-    // 3) Create a new instance of PlacementDialogFlow
     final placementFlow = PlacementDialogFlow();
-
-    // 4) Start the 400ms timer & show dialogs, passing the short address
     placementFlow.startPlacementDialogTimer(
       pressPoint: pressPoint,
       context: context,
       annotationsManager: _annotationsManager,
       localAnnotationsRepository: _localRepo,
       annotationIdLinker: _annotationsManager.annotationIdLinker,
-      initialShortAddress: shortAddr, // pre-fill the short address in the dialog
+      initialShortAddress: shortAddr,
     );
   }
 
@@ -292,12 +294,10 @@ class EarthMapPageState extends State<EarthMapPage> {
   void _handleMoveOrLockButton() {
     setState(() {
       if (_isDragging) {
-        // Lock
         _gestureHandler.hideTrashCanAndStopDragging();
         _isDragging = false;
         _showRelocateHint = false;
       } else {
-        // Move
         _gestureHandler.startDraggingSelectedAnnotation();
         _isDragging = true;
         _showRelocateHint = true;
@@ -310,12 +310,10 @@ class EarthMapPageState extends State<EarthMapPage> {
       logger.w('No annotation selected to edit.');
       return;
     }
-
     await _annotationActions.editAnnotation(
       context: context,
       mapAnnotation: _annotationMenuAnnotation!,
     );
-
     setState(() {});
   }
 
@@ -379,11 +377,8 @@ class EarthMapPageState extends State<EarthMapPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // The main map widget
           _buildMapWidget(),
-
           if (_isMapReady) ...[
-            // Timeline
             buildTimelineButton(
               isMapReady: _isMapReady,
               context: context,
@@ -395,8 +390,6 @@ class EarthMapPageState extends State<EarthMapPage> {
             buildClearAnnotationsButton(annotationsManager: _annotationsManager),
             buildClearImagesButton(),
             buildDeleteImagesFolderButton(),
-
-            // The search widget
             EarthMapSearchWidget(
               mapboxMap: _mapboxMap,
               annotationsManager: _annotationsManager,
@@ -406,8 +399,6 @@ class EarthMapPageState extends State<EarthMapPage> {
               onSearchOpened: () => setState(() => _showRelocateHint = false),
               onSearchClosed: () => {},
             ),
-
-            // "Relocate by address" hint if in move mode
             if (_isDragging && _showRelocateHint)
               Positioned(
                 top: 45,
@@ -424,8 +415,6 @@ class EarthMapPageState extends State<EarthMapPage> {
                   ),
                 ),
               ),
-
-            // The annotation menu
             AnnotationMenu(
               show: _showAnnotationMenu,
               annotation: _annotationMenuAnnotation,
@@ -437,15 +426,11 @@ class EarthMapPageState extends State<EarthMapPage> {
               onConnect: _handleConnectButton,
               onCancel: _handleCancelButton,
             ),
-
-            // Connect mode banner
             buildConnectModeBanner(
               isConnectMode: _isConnectMode,
               gestureHandler: _gestureHandler,
               onCancel: () => setState(() => _isConnectMode = false),
             ),
-
-            // Timeline Canvas
             buildTimelineCanvas(
               showTimelineCanvas: _showTimelineCanvas,
               hiveUuids: _hiveUuidsForTimeline,
