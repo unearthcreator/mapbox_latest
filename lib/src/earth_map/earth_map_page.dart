@@ -76,36 +76,58 @@ class EarthMapPageState extends State<EarthMapPage> {
 
   // ---------------------------------------------------------------------
   // Helper function to determine the style URI based on user preferences.
-  // Now, if the user saved a globe with manual mode and "Day" for standard map type,
-  // it returns the new style URI.
+  // Logs details to help debug.
   String _determineGlobeStyleUri() {
     final config = widget.worldConfig;
     logger.i("User preferences - isFlatMap: ${config.isFlatMap}, mapType: ${config.mapType}, timeMode: ${config.timeMode}, manualTheme: ${config.manualTheme}");
     
-    // Handle globe cases (when isFlatMap is false)
-    if (!config.isFlatMap) {
+    if (config.isFlatMap) {
+      logger.i("Flat map branch reached.");
       if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
         final theme = config.manualTheme!.toLowerCase();
+        logger.i("Flat map manual mode: theme = $theme");
         if (config.mapType.toLowerCase() == 'standard') {
           if (theme == 'day') {
-            return MapConfig.styleUriGlobeStandardDay;
+            logger.i("Returning flat style URI for standard day: ${MapConfig.styleUriFlatStandardDay}");
+            return MapConfig.styleUriFlatStandardDay;
+          } else if (theme == 'dawn') {
+            logger.i("Returning flat style URI for standard dawn: ${MapConfig.styleUriFlatStandardDawn}");
+            return MapConfig.styleUriFlatStandardDawn;
+          } else {
+            logger.i("Flat map manual mode but theme is not 'day' or 'dawn'. Theme is: $theme");
           }
-          // You could add additional conditions for dawn, dusk, night here.
         }
-        // You can add satellite conditions here as well.
       }
+      logger.i("Returning fallback flat style (using default Earth style) for flat map.");
+      return MapConfig.styleUriEarth; // Fallback if conditions not met.
+    } else {
+      logger.i("Globe map branch reached.");
+      if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
+        final theme = config.manualTheme!.toLowerCase();
+        logger.i("Globe manual mode: theme = $theme");
+        if (config.mapType.toLowerCase() == 'standard') {
+          if (theme == 'day') {
+            logger.i("Returning globe style URI for standard day: ${MapConfig.styleUriGlobeStandardDay}");
+            return MapConfig.styleUriGlobeStandardDay;
+          } else {
+            logger.i("Globe manual mode but theme is not 'day'. Theme is: $theme");
+          }
+        }
+      }
+      logger.i("Returning fallback globe style: ${MapConfig.styleUriEarth}");
+      return MapConfig.styleUriEarth;
     }
-    // Fallback: return the default style for Earth.
-    return MapConfig.styleUriEarth;
   }
 
   // ---------------------------------------------------------------------
-  //                       MAP CREATION / INIT
+  // MAP CREATION / INIT
   // ---------------------------------------------------------------------
   Future<void> _onMapCreated(MapboxMap mapboxMap) async {
     try {
       logger.i('Starting map initialization');
       _mapboxMap = mapboxMap;
+
+      // Note: Removed setMapProjection calls because they are not supported in your SDK version.
 
       // 1) Create the underlying Mapbox annotation manager
       final annotationManager = await mapboxMap.annotations
@@ -167,7 +189,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //               CAMERA CHANGES -> MENU "STICKS"
+  // CAMERA CHANGES -> MENU "STICKS"
   // ---------------------------------------------------------------------
   void _onCameraChangeListener(CameraChangedEventData data) {
     _updateMenuPositionIfNeeded();
@@ -184,7 +206,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //            ANNOTATION / MENU REVERT HANDLING
+  // ANNOTATION / MENU REVERT HANDLING
   // ---------------------------------------------------------------------
   Future<void> _handleAnnotationReverted(PointAnnotation annotation) async {
     final screenPos = await _mapboxMap.pixelForCoordinate(annotation.geometry);
@@ -198,7 +220,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //               ANNOTATION UI & CALLBACKS
+  // ANNOTATION UI & CALLBACKS
   // ---------------------------------------------------------------------
   void _handleAnnotationLongPress(PointAnnotation annotation, Point annotationPosition) async {
     final screenPos = await _mapboxMap.pixelForCoordinate(annotationPosition);
@@ -228,7 +250,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //                        GESTURE DETECTOR
+  // GESTURE DETECTOR
   // ---------------------------------------------------------------------
   void _handleLongPress(LongPressStartDetails details) {
     try {
@@ -269,7 +291,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //          NEW: PLACEMENT DIALOG REQUEST -> REVERSE GEOCODE
+  // NEW: PLACEMENT DIALOG REQUEST -> REVERSE GEOCODE
   // ---------------------------------------------------------------------
   Future<void> _handlePlacementDialogRequest(Point pressPoint) async {
     logger.i('EarthMapPage received a placement dialog request at $pressPoint');
@@ -289,7 +311,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //                     MENU BUTTON CALLBACKS
+  // MENU BUTTON CALLBACKS
   // ---------------------------------------------------------------------
   void _handleMoveOrLockButton() {
     setState(() {
@@ -348,7 +370,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  //                            UI BUILDERS
+  // UI BUILDERS
   // ---------------------------------------------------------------------
   Widget _buildMapWidget() {
     final styleUri = _determineGlobeStyleUri();

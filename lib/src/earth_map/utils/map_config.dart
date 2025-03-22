@@ -16,6 +16,14 @@ class MapConfig {
   static const String styleUriGlobeStandardDay =
       "mapbox://styles/unearthcreator/cm8kk457f018c01se2j7mfnlf";
 
+  /// New style URI for a standard flat earth with manual "Day" preference.
+  static const String styleUriFlatStandardDay =
+      "mapbox://styles/unearthcreator/cm8kkp3s801ab01qzdi4c8x1y";
+
+  /// New style URI for a standard flat earth with manual "Dawn" preference.
+  static const String styleUriFlatStandardDawn =
+      "mapbox://styles/unearthcreator/cm8koog2g019k01sbb30n80qi";
+
   /// Default camera options, focusing on a wide area (zoom 1, near center of US).
   static CameraOptions defaultCameraOptions = CameraOptions(
     center: Point(coordinates: Position(-98.0, 39.5)),
