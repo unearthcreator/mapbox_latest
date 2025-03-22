@@ -50,7 +50,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   Offset _annotationMenuOffset = Offset.zero;
 
   // ---------------------- Dragging & Connect Mode ----------------------
-  bool _isDragging = false;   // True if user clicked "Move"
+  bool _isDragging = false; // True if user clicked "Move"
   bool _isConnectMode = false;
   String get _annotationButtonText => _isDragging ? 'Lock' : 'Move';
 
@@ -93,13 +93,19 @@ class EarthMapPageState extends State<EarthMapPage> {
           } else if (theme == 'dawn') {
             logger.i("Returning flat style URI for standard dawn: ${MapConfig.styleUriFlatStandardDawn}");
             return MapConfig.styleUriFlatStandardDawn;
+          } else if (theme == 'dusk') {
+            logger.i("Returning flat style URI for standard dusk: ${MapConfig.styleUriFlatStandardDusk}");
+            return MapConfig.styleUriFlatStandardDusk;
+          } else if (theme == 'night') {
+            logger.i("Returning flat style URI for standard night: ${MapConfig.styleUriFlatStandardNight}");
+            return MapConfig.styleUriFlatStandardNight;
           } else {
-            logger.i("Flat map manual mode but theme is not 'day' or 'dawn'. Theme is: $theme");
+            logger.i("Flat map manual mode but theme is not recognized: $theme");
           }
         }
       }
       logger.i("Returning fallback flat style (using default Earth style) for flat map.");
-      return MapConfig.styleUriEarth; // Fallback if conditions not met.
+      return MapConfig.styleUriEarth; // Fallback for flat maps.
     } else {
       logger.i("Globe map branch reached.");
       if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
@@ -109,8 +115,17 @@ class EarthMapPageState extends State<EarthMapPage> {
           if (theme == 'day') {
             logger.i("Returning globe style URI for standard day: ${MapConfig.styleUriGlobeStandardDay}");
             return MapConfig.styleUriGlobeStandardDay;
+          } else if (theme == 'dawn') {
+            logger.i("Returning globe style URI for standard dawn: ${MapConfig.styleUriGlobeStandardDawn}");
+            return MapConfig.styleUriGlobeStandardDawn;
+          } else if (theme == 'dusk') {
+            logger.i("Returning globe style URI for standard dusk: ${MapConfig.styleUriGlobeStandardDusk}");
+            return MapConfig.styleUriGlobeStandardDusk;
+          } else if (theme == 'night') {
+            logger.i("Returning globe style URI for standard night: ${MapConfig.styleUriGlobeStandardNight}");
+            return MapConfig.styleUriGlobeStandardNight;
           } else {
-            logger.i("Globe manual mode but theme is not 'day'. Theme is: $theme");
+            logger.i("Globe manual mode but theme is not recognized: $theme");
           }
         }
       }
