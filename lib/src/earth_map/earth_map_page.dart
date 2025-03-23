@@ -5,7 +5,6 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 // ---------------------- External & Project Imports ----------------------
 import 'package:map_mvp_project/repositories/local_annotations_repository.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' show CameraChangedEventData;
 import 'package:map_mvp_project/services/error_handler.dart';
 import 'package:map_mvp_project/src/earth_map/annotations/map_annotations_manager.dart';
 import 'package:map_mvp_project/src/earth_map/gestures/map_gesture_handler.dart';
@@ -21,6 +20,7 @@ import 'package:map_mvp_project/src/earth_map/annotations/annotation_menu.dart';
 import 'package:map_mvp_project/src/earth_map/dialogs/annotation_dialog_flow.dart';
 import 'package:map_mvp_project/src/earth_map/annotations/annotation_actions.dart';
 import 'package:map_mvp_project/services/geocoding_service.dart'; // for fetchShortAddress
+import 'package:map_mvp_project/src/earth_map/utils/style_helper.dart';
 
 /// The main EarthMapPage, which sets up the map, annotations, and various UI widgets.
 class EarthMapPage extends StatefulWidget {
@@ -75,98 +75,9 @@ class EarthMapPageState extends State<EarthMapPage> {
   }
 
   // ---------------------------------------------------------------------
-  // Helper function to determine the style URI based on user preferences.
-  // This function handles both flat and globe maps, each with "day", "dawn", "dusk", and "night" themes,
-  // for both standard and satellite map types.
-  String _determineGlobeStyleUri() {
-    final config = widget.worldConfig;
-    logger.i("User preferences - isFlatMap: ${config.isFlatMap}, mapType: ${config.mapType}, timeMode: ${config.timeMode}, manualTheme: ${config.manualTheme}");
-
-    // For Flat Maps (Mercator)
-    if (config.isFlatMap) {
-      logger.i("Flat map branch reached.");
-      if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
-        final theme = config.manualTheme!.toLowerCase();
-        logger.i("Flat map manual mode: theme = $theme");
-        if (config.mapType.toLowerCase() == 'standard') {
-          if (theme == 'day') {
-            logger.i("Returning flat style URI for standard day: ${MapConfig.styleUriFlatStandardDay}");
-            return MapConfig.styleUriFlatStandardDay;
-          } else if (theme == 'dawn') {
-            logger.i("Returning flat style URI for standard dawn: ${MapConfig.styleUriFlatStandardDawn}");
-            return MapConfig.styleUriFlatStandardDawn;
-          } else if (theme == 'dusk') {
-            logger.i("Returning flat style URI for standard dusk: ${MapConfig.styleUriFlatStandardDusk}");
-            return MapConfig.styleUriFlatStandardDusk;
-          } else if (theme == 'night') {
-            logger.i("Returning flat style URI for standard night: ${MapConfig.styleUriFlatStandardNight}");
-            return MapConfig.styleUriFlatStandardNight;
-          } else {
-            logger.i("Flat map manual mode but theme not recognized: $theme");
-          }
-        } else if (config.mapType.toLowerCase() == 'satellite') {
-          if (theme == 'day') {
-            logger.i("Returning flat satellite style URI for day: ${MapConfig.styleUriFlatSatelliteDay}");
-            return MapConfig.styleUriFlatSatelliteDay;
-          } else if (theme == 'dawn') {
-            logger.i("Returning flat satellite style URI for dawn: ${MapConfig.styleUriFlatSatelliteDawn}");
-            return MapConfig.styleUriFlatSatelliteDawn;
-          } else if (theme == 'dusk') {
-            logger.i("Returning flat satellite style URI for dusk: ${MapConfig.styleUriFlatSatelliteDusk}");
-            return MapConfig.styleUriFlatSatelliteDusk;
-          } else if (theme == 'night') {
-            logger.i("Returning flat satellite style URI for night: ${MapConfig.styleUriFlatSatelliteNight}");
-            return MapConfig.styleUriFlatSatelliteNight;
-          } else {
-            logger.i("Flat satellite manual mode but theme not recognized: $theme");
-          }
-        }
-      }
-      logger.i("Returning fallback flat style (using default Earth style) for flat map.");
-      return MapConfig.styleUriEarth; // Fallback for flat maps.
-    } else {
-      // For Globe Maps
-      logger.i("Globe map branch reached.");
-      if (config.timeMode.toLowerCase() == 'manual' && config.manualTheme != null) {
-        final theme = config.manualTheme!.toLowerCase();
-        logger.i("Globe manual mode: theme = $theme");
-        if (config.mapType.toLowerCase() == 'standard') {
-          if (theme == 'day') {
-            logger.i("Returning globe style URI for standard day: ${MapConfig.styleUriGlobeStandardDay}");
-            return MapConfig.styleUriGlobeStandardDay;
-          } else if (theme == 'dawn') {
-            logger.i("Returning globe style URI for standard dawn: ${MapConfig.styleUriGlobeStandardDawn}");
-            return MapConfig.styleUriGlobeStandardDawn;
-          } else if (theme == 'dusk') {
-            logger.i("Returning globe style URI for standard dusk: ${MapConfig.styleUriGlobeStandardDusk}");
-            return MapConfig.styleUriGlobeStandardDusk;
-          } else if (theme == 'night') {
-            logger.i("Returning globe style URI for standard night: ${MapConfig.styleUriGlobeStandardNight}");
-            return MapConfig.styleUriGlobeStandardNight;
-          } else {
-            logger.i("Globe manual mode but theme not recognized: $theme");
-          }
-        } else if (config.mapType.toLowerCase() == 'satellite') {
-          if (theme == 'day') {
-            logger.i("Returning globe satellite style URI for day: ${MapConfig.styleUriGlobeSatelliteDay}");
-            return MapConfig.styleUriGlobeSatelliteDay;
-          } else if (theme == 'dawn') {
-            logger.i("Returning globe satellite style URI for dawn: ${MapConfig.styleUriGlobeSatelliteDawn}");
-            return MapConfig.styleUriGlobeSatelliteDawn;
-          } else if (theme == 'dusk') {
-            logger.i("Returning globe satellite style URI for dusk: ${MapConfig.styleUriGlobeSatelliteDusk}");
-            return MapConfig.styleUriGlobeSatelliteDusk;
-          } else if (theme == 'night') {
-            logger.i("Returning globe satellite style URI for night: ${MapConfig.styleUriGlobeSatelliteNight}");
-            return MapConfig.styleUriGlobeSatelliteNight;
-          } else {
-            logger.i("Globe satellite manual mode but theme not recognized: $theme");
-          }
-        }
-      }
-      logger.i("Returning fallback globe style: ${MapConfig.styleUriEarth}");
-      return MapConfig.styleUriEarth;
-    }
+  // Use the helper function from style_helper.dart to determine the style URI.
+  String _determineMapStyleUri() {
+    return determineMapStyleUri(widget.worldConfig);
   }
 
   // ---------------------------------------------------------------------
@@ -176,8 +87,6 @@ class EarthMapPageState extends State<EarthMapPage> {
     try {
       logger.i('Starting map initialization');
       _mapboxMap = mapboxMap;
-
-      // Note: Removed setMapProjection calls because they are not supported in your SDK version.
 
       // 1) Create the underlying Mapbox annotation manager
       final annotationManager = await mapboxMap.annotations
@@ -423,7 +332,7 @@ class EarthMapPageState extends State<EarthMapPage> {
   // UI BUILDERS
   // ---------------------------------------------------------------------
   Widget _buildMapWidget() {
-    final styleUri = _determineGlobeStyleUri();
+    final styleUri = _determineMapStyleUri();
     logger.i("Using style URI: $styleUri");
     return GestureDetector(
       onLongPressStart: _handleLongPress,
