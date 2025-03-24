@@ -8,10 +8,11 @@ class Annotation {
   final double? latitude;
   final double? longitude;
   final String? imagePath;
-
-  // NEW: Two optional fields for address
+  
+  // Optional fields for address and worldId.
   final String? shortAddress;
   final String? fullAddress;
+  final String? worldId;
 
   Annotation({
     required this.id,
@@ -23,8 +24,9 @@ class Annotation {
     this.latitude,
     this.longitude,
     this.imagePath,
-    this.shortAddress,   // <-- new
-    this.fullAddress,    // <-- new
+    this.shortAddress,
+    this.fullAddress,
+    this.worldId,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,8 +40,9 @@ class Annotation {
       'latitude': latitude,
       'longitude': longitude,
       'imagePath': imagePath,
-      'shortAddress': shortAddress, // new
-      'fullAddress': fullAddress,   // new
+      'shortAddress': shortAddress,
+      'fullAddress': fullAddress,
+      'worldId': worldId,
     };
   }
 
@@ -54,8 +57,9 @@ class Annotation {
       latitude: json['latitude'] as double?,
       longitude: json['longitude'] as double?,
       imagePath: json['imagePath'] as String?,
-      shortAddress: json['shortAddress'] as String?, // new
-      fullAddress: json['fullAddress'] as String?,   // new
+      shortAddress: json['shortAddress'] as String?,
+      fullAddress: json['fullAddress'] as String?,
+      worldId: json['worldId'] as String?,
     );
   }
 
@@ -71,8 +75,9 @@ class Annotation {
            'latitude: $latitude, '
            'longitude: $longitude, '
            'imagePath: $imagePath, '
-           'shortAddress: $shortAddress, '    // new
-           'fullAddress: $fullAddress'        // new
+           'shortAddress: $shortAddress, '
+           'fullAddress: $fullAddress, '
+           'worldId: $worldId'
            ')';
   }
 }

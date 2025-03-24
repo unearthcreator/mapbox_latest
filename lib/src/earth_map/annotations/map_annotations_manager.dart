@@ -21,11 +21,11 @@ class MultiAnnotationGroup {
 
   /// Collect all sub-annotations in a single list (for removal/updating).
   List<PointAnnotation> get all => [
-    iconAnnotation,
-    if (titleAnnotation != null) titleAnnotation!,
-    if (addressAnnotation != null) addressAnnotation!,
-    if (dateAnnotation != null) dateAnnotation!,
-  ];
+        iconAnnotation,
+        if (titleAnnotation != null) titleAnnotation!,
+        if (addressAnnotation != null) addressAnnotation!,
+        if (dateAnnotation != null) dateAnnotation!,
+      ];
 }
 
 class MapAnnotationsManager {
@@ -96,7 +96,7 @@ class MapAnnotationsManager {
     String? shortAddress,
     String? startDate,
     String? endDate,
-    String? date,    // <-- a single combined date string and 
+    String? date, // a single combined date string
   }) async {
     logger.i('Adding MULTI annotation at: ${mapPoint.coordinates.lat}, ${mapPoint.coordinates.lng}');
 
@@ -129,9 +129,9 @@ class MapAnnotationsManager {
       final titleOptions = PointAnnotationOptions(
         geometry: mapPoint,
         textField: title,
-        textSize: 20.0,   // Title is largest
+        textSize: 20.0, // Title is largest
         textAnchor: TextAnchor.BOTTOM,
-        textOffset: [0, -4.0], // adjust to place near address
+        textOffset: [0, -4.0],
         textColor: 0xFFFFFFFF,
         textHaloColor: 0xFF000000,
         textHaloWidth: 1.0,
@@ -146,20 +146,19 @@ class MapAnnotationsManager {
       final addrOptions = PointAnnotationOptions(
         geometry: mapPoint,
         textField: shortAddress,
-        textSize: 16.0,  // Address & date share same size
+        textSize: 16.0,
         textAnchor: TextAnchor.BOTTOM,
         textOffset: [0, -2.8],
         textColor: 0xFFFFFFFF,
         textHaloColor: 0xFF000000,
         textHaloWidth: 1.0,
         textHaloBlur: 0.5,
-        // Keep text on a single line
         textMaxWidth: 1000.0,
       );
       addressAnn = await _annotationManager.create(addrOptions);
     }
 
-    // 5) Date annotation (medium text size) => finalDateText
+    // 5) Date annotation (medium text size) using finalDateText
     PointAnnotation? dateAnn;
     if (finalDateText != null && finalDateText.isNotEmpty) {
       final dateOptions = PointAnnotationOptions(
@@ -167,7 +166,7 @@ class MapAnnotationsManager {
         textField: finalDateText,
         textSize: 16.0,
         textAnchor: TextAnchor.TOP,
-        textOffset: [0, 0.8], // closer to icon
+        textOffset: [0, 0.8],
         textColor: 0xFFFFFFFF,
         textHaloColor: 0xFF000000,
         textHaloWidth: 1.0,
@@ -176,7 +175,6 @@ class MapAnnotationsManager {
       dateAnn = await _annotationManager.create(dateOptions);
     }
 
-    // Combine them into a group object
     final group = MultiAnnotationGroup(
       iconAnnotation: iconAnn,
       titleAnnotation: titleAnn,
@@ -184,7 +182,6 @@ class MapAnnotationsManager {
       dateAnnotation: dateAnn,
     );
 
-    // Track them in the manager
     _multiAnnotations.add(group);
     _annotations.addAll(group.all);
 
@@ -287,11 +284,19 @@ class MapAnnotationsManager {
   // --------------------------------------------------------------------------
   // LOADING FROM HIVE (EXAMPLE)
   // --------------------------------------------------------------------------
-  Future<void> loadAnnotationsFromHive() async {
-    logger.i('loadAnnotationsFromHive() => loading...');
+  Future<void> loadAnnotationsFromHive({String? worldId}) async {
+    logger.i('loadAnnotationsFromHive() => loading annotations' +
+        (worldId != null ? ' for worldId: $worldId' : ''));
+
     final hiveAnnotations = await localAnnotationsRepository.getAnnotations();
 
-    for (final ann in hiveAnnotations) {
+    final filteredAnnotations = (worldId != null)
+        ? hiveAnnotations.where((ann) => ann.worldId == worldId).toList()
+        : hiveAnnotations.toList();
+
+    logger.i('Total annotations from Hive: ${hiveAnnotations.length}. Filtered count: ${filteredAnnotations.length}');
+
+    for (final ann in filteredAnnotations) {
       final lat = ann.latitude;
       final lng = ann.longitude;
       if (lat == null || lng == null) {
@@ -312,8 +317,7 @@ class MapAnnotationsManager {
         }
       }
 
-      // If you store shortAddress in ann.note or a dedicated field,
-      // adjust accordingly (this is just an example).
+      // In this example, we use ann.note as the short address.
       final shortAddr = ann.note ?? '';
 
       final group = await addMultiPartAnnotation(
@@ -321,7 +325,6 @@ class MapAnnotationsManager {
         iconBytes: iconBytes,
         title: ann.title,
         shortAddress: shortAddr,
-        // now pass start & end dates if you store them:
         startDate: ann.startDate,
         endDate: ann.endDate,
       );

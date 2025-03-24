@@ -92,7 +92,8 @@ class EarthMapPageState extends State<EarthMapPage> {
       final annotationManager = await mapboxMap.annotations
           .createPointAnnotationManager()
           .onError((error, stackTrace) {
-        logger.e('Failed to create annotation manager', error: error, stackTrace: stackTrace);
+        logger.e('Failed to create annotation manager',
+            error: error, stackTrace: stackTrace);
         throw Exception('Failed to initialize map annotations');
       });
 
@@ -134,10 +135,12 @@ class EarthMapPageState extends State<EarthMapPage> {
 
       logger.i('Map initialization completed successfully');
 
-      // Once map is ready, load saved Hive annotations
+      // Once map is ready, load saved Hive annotations using the current worldId.
       if (mounted) {
         setState(() => _isMapReady = true);
-        await _annotationsManager.loadAnnotationsFromHive();
+        await _annotationsManager.loadAnnotationsFromHive(
+          worldId: widget.worldConfig.id,
+        );
       }
     } catch (e, stackTrace) {
       logger.e('Error during map initialization', error: e, stackTrace: stackTrace);
@@ -266,6 +269,7 @@ class EarthMapPageState extends State<EarthMapPage> {
       localAnnotationsRepository: _localRepo,
       annotationIdLinker: _annotationsManager.annotationIdLinker,
       initialShortAddress: shortAddr,
+      worldId: widget.worldConfig.id, // Pass worldId here
     );
   }
 

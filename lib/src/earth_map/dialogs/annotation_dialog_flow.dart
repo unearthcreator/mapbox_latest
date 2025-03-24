@@ -38,6 +38,7 @@ class PlacementDialogFlow {
     required MapAnnotationsManager annotationsManager,
     required LocalAnnotationsRepository localAnnotationsRepository,
     required AnnotationIdLinker annotationIdLinker,
+    String? worldId, // Optional world-specific ID
     String? initialShortAddress,  // short address
     String? initialFullAddress,   // full address
   }) {
@@ -58,8 +59,6 @@ class PlacementDialogFlow {
         logger.i('PlacementDialogFlow: initial form returned => $initialData');
 
         if (initialData != null) {
-          // If your dialog returns 'address' rather than 'shortAddress',
-          // switch to: _chosenShortAddress = initialData['address'] as String?;
           _chosenTitle        = initialData['title'] as String?;
           _chosenShortAddress = initialData['shortAddress'] as String?;
           _chosenIconName     = initialData['icon'] as String;
@@ -84,6 +83,7 @@ class PlacementDialogFlow {
               annotationsManager: annotationsManager,
               localAnnotationsRepository: localAnnotationsRepository,
               annotationIdLinker: annotationIdLinker,
+              worldId: worldId,
             );
           } else {
             await _startFormDialogFlow(
@@ -92,6 +92,7 @@ class PlacementDialogFlow {
               annotationsManager: annotationsManager,
               localAnnotationsRepository: localAnnotationsRepository,
               annotationIdLinker: annotationIdLinker,
+              worldId: worldId,
             );
           }
         } else {
@@ -114,6 +115,7 @@ class PlacementDialogFlow {
     required MapAnnotationsManager annotationsManager,
     required LocalAnnotationsRepository localAnnotationsRepository,
     required AnnotationIdLinker annotationIdLinker,
+    String? worldId, // Optional world-specific ID
   }) async {
     logger.i('PlacementDialogFlow: _quickSaveAnnotation => pressPoint=${pressPoint.coordinates}');
     logger.i('PlacementDialogFlow: _quickSaveAnnotation => shortAddress=$_chosenShortAddress');
@@ -149,10 +151,9 @@ class PlacementDialogFlow {
       longitude: longitude,
       note: null,
       imagePath: null,
-
-      // If your model has shortAddress & fullAddress fields
       shortAddress: _chosenShortAddress,
       fullAddress: _chosenFullAddress,
+      worldId: worldId, // Save the current worldId if provided
     );
 
     await localAnnotationsRepository.addAnnotation(annotation);
@@ -172,6 +173,7 @@ class PlacementDialogFlow {
     required MapAnnotationsManager annotationsManager,
     required LocalAnnotationsRepository localAnnotationsRepository,
     required AnnotationIdLinker annotationIdLinker,
+    String? worldId, // Optional world-specific ID
   }) async {
     logger.i('PlacementDialogFlow: showing annotation form dialog...');
     final result = await showAnnotationFormDialog(
@@ -219,6 +221,7 @@ class PlacementDialogFlow {
               annotationsManager: annotationsManager,
               localAnnotationsRepository: localAnnotationsRepository,
               annotationIdLinker: annotationIdLinker,
+              worldId: worldId,
             );
           } else {
             logger.i('PlacementDialogFlow: showing final form again (no quicksave).');
@@ -228,6 +231,7 @@ class PlacementDialogFlow {
               annotationsManager: annotationsManager,
               localAnnotationsRepository: localAnnotationsRepository,
               annotationIdLinker: annotationIdLinker,
+              worldId: worldId,
             );
           }
         } else {
@@ -247,7 +251,6 @@ class PlacementDialogFlow {
         final bytes = await rootBundle.load('assets/icons/$_chosenIconName.png');
         final imageData = bytes.buffer.asUint8List();
 
-        // Log short address before we call the manager
         logger.i('PlacementDialogFlow: final save => shortAddress=$_chosenShortAddress');
 
         final multiGroup = await annotationsManager.addMultiPartAnnotation(
@@ -263,7 +266,7 @@ class PlacementDialogFlow {
         final latitude = pressPoint.coordinates.lat.toDouble();
         final longitude = pressPoint.coordinates.lng.toDouble();
 
-        // Build the model
+        // Build the model with the current worldId if provided
         final annotation = Annotation(
           id: id,
           title: _chosenTitle?.isNotEmpty == true ? _chosenTitle : null,
@@ -274,9 +277,9 @@ class PlacementDialogFlow {
           latitude: latitude,
           longitude: longitude,
           imagePath: (imagePath != null && imagePath.isNotEmpty) ? imagePath : null,
-
           shortAddress: _chosenShortAddress,
           fullAddress: _chosenFullAddress,
+          worldId: worldId, // Include the current worldId if provided
         );
 
         await localAnnotationsRepository.addAnnotation(annotation);
