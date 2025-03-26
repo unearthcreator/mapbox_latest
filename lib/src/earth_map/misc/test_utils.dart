@@ -8,26 +8,41 @@ import 'package:map_mvp_project/src/earth_map/annotations/map_annotations_manage
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-/// Returns a Positioned button that clears all annotations from Hive + the map.
-/// [annotationsManager] is needed to remove all map annotations.
+/// Returns a Positioned button that clears annotations (from Hive and the map)
+/// for the given worldId. If worldId is not provided, it clears all annotations.
 Widget buildClearAnnotationsButton({
   required MapAnnotationsManager annotationsManager,
+  String? worldId,
 }) {
   return Positioned(
     top: 40,
     right: 10,
     child: ElevatedButton(
       onPressed: () async {
-        logger.i('Clear button pressed - clearing all annotations from Hive and from the map.');
+        logger.i('Clear button pressed - clearing annotations for worldId: $worldId');
 
-        // 1) Remove all from Hive
+        // 1) Remove annotations from Hive:
         final box = await Hive.openBox<Map>('annotationsBox');
-        await box.clear();
-        logger.i('After clearing, the "annotationsBox" has ${box.length} items.');
+        if (worldId != null) {
+          final keysToDelete = <dynamic>[];
+          for (var key in box.keys) {
+            final annotationMap = box.get(key);
+            if (annotationMap != null && annotationMap['worldId'] == worldId) {
+              keysToDelete.add(key);
+            }
+          }
+          for (var key in keysToDelete) {
+            await box.delete(key);
+          }
+          logger.i('Annotations with worldId $worldId cleared from Hive. Remaining items: ${box.length}');
+        } else {
+          await box.clear();
+          logger.i('All annotations cleared from Hive.');
+        }
         await box.close();
-        logger.i('Annotations cleared from Hive.');
 
-        // 2) Remove all from the map visually
+        // 2) Remove annotations from the map visually.
+        // (Assuming the annotationsManager currently holds only annotations for the active world.)
         await annotationsManager.removeAllAnnotations();
         logger.i('All annotations removed from the map.');
         logger.i('Done clearing. You can now add new annotations.');

@@ -67,6 +67,8 @@ class EarthMapPageState extends State<EarthMapPage> {
   void initState() {
     super.initState();
     logger.i('Initializing EarthMapPage');
+    // Log the world ID for debugging
+    logger.i('EarthMapPage worldId: ${widget.worldConfig.id}');
   }
 
   @override
@@ -269,7 +271,7 @@ class EarthMapPageState extends State<EarthMapPage> {
       localAnnotationsRepository: _localRepo,
       annotationIdLinker: _annotationsManager.annotationIdLinker,
       initialShortAddress: shortAddr,
-      worldId: widget.worldConfig.id, // Pass worldId here
+      worldId: widget.worldConfig.id, // Pass the worldId here
     );
   }
 
@@ -359,6 +361,8 @@ class EarthMapPageState extends State<EarthMapPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Log the current worldId on build
+    logger.i('Building EarthMapPage for worldId: ${widget.worldConfig.id}');
     return Scaffold(
       body: Stack(
         children: [
@@ -372,7 +376,11 @@ class EarthMapPageState extends State<EarthMapPage> {
               onToggleTimeline: () => setState(() => _showTimelineCanvas = !_showTimelineCanvas),
               onHiveIdsFetched: (List<String> hiveIds) => setState(() => _hiveUuidsForTimeline = hiveIds),
             ),
-            buildClearAnnotationsButton(annotationsManager: _annotationsManager),
+            // Pass worldId to clear annotations button so that it only clears annotations for the current world.
+            buildClearAnnotationsButton(
+              annotationsManager: _annotationsManager,
+              worldId: widget.worldConfig.id,
+            ),
             buildClearImagesButton(),
             buildDeleteImagesFolderButton(),
             EarthMapSearchWidget(
