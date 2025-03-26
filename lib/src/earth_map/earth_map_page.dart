@@ -67,8 +67,12 @@ class EarthMapPageState extends State<EarthMapPage> {
   void initState() {
     super.initState();
     logger.i('Initializing EarthMapPage');
-    // Log the world ID for debugging
-    logger.i('EarthMapPage worldId: ${widget.worldConfig.id}');
+    // Check and log the worldId
+    if (widget.worldConfig.id == null || widget.worldConfig.id.isEmpty) {
+      logger.e('Error: worldConfig.id is null or empty!');
+    } else {
+      logger.i('EarthMapPage worldId: ${widget.worldConfig.id}');
+    }
   }
 
   @override

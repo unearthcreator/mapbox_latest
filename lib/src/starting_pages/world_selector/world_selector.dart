@@ -28,7 +28,6 @@ class _WorldSelectorPageState extends State<WorldSelectorPage> {
     super.initState();
     logger.i('WorldSelectorPage initState -> initializing');
     _worldsRepo = LocalWorldsRepository();
-
     _loadWorldsAndPreferences();
   }
 
@@ -61,8 +60,16 @@ class _WorldSelectorPageState extends State<WorldSelectorPage> {
 
   Future<void> _handleClearAllWorlds() async {
     try {
+      // Clear all world configurations.
       await _worldsRepo.clearAllWorldConfigs();
       logger.i('Cleared all worlds from Hive.');
+
+      // Also clear all annotations from Hive.
+      final box = await Hive.openBox<Map>('annotationsBox');
+      await box.clear();
+      await box.close();
+      logger.i('Cleared all annotations from Hive.');
+
       await LocalAppPreferences.setLastUsedCarouselIndex(4);
       await _loadWorldsAndPreferences();
       _showSnackBar('All worlds cleared.');
