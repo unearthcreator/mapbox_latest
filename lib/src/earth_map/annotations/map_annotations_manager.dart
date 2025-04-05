@@ -43,7 +43,7 @@ class MapAnnotationsManager {
     required this.localAnnotationsRepository,
   });
 
-  /// Access to the underlying annotation manager
+  /// Access to the underlying annotation manager.
   PointAnnotationManager get pointAnnotationManager => _annotationManager;
 
   // --------------------------------------------------------------------------
@@ -89,110 +89,111 @@ class MapAnnotationsManager {
   // --------------------------------------------------------------------------
   // MULTI-ANNOTATION METHOD (Icon + Title + ShortAddress + Start/End Date)
   // --------------------------------------------------------------------------
-Future<MultiAnnotationGroup> addMultiPartAnnotation({
-  required Point mapPoint,
-  Uint8List? iconBytes,
-  String? title,
-  String? shortAddress,
-  String? startDate,
-  String? endDate,
-  String? date, // a single combined date string (unused here)
-}) async {
-  logger.i('Adding MULTI annotation at: ${mapPoint.coordinates.lat}, ${mapPoint.coordinates.lng}');
+  Future<MultiAnnotationGroup> addMultiPartAnnotation({
+    required Point mapPoint,
+    Uint8List? iconBytes,
+    String? title,
+    String? shortAddress,
+    String? startDate,
+    String? endDate,
+    String? date, // a single combined date string (unused here)
+  }) async {
+    logger.i('Adding MULTI annotation at: ${mapPoint.coordinates.lat}, ${mapPoint.coordinates.lng}');
 
-  // 1) Combine startDate + endDate into one date string if both exist
-  String? finalDateText;
-  if (startDate != null && startDate.isNotEmpty && endDate != null && endDate.isNotEmpty) {
-    finalDateText = '$startDate - $endDate';
-  } else if (startDate != null && startDate.isNotEmpty) {
-    finalDateText = startDate;
-  } else if (endDate != null && endDate.isNotEmpty) {
-    finalDateText = endDate;
-  } else {
-    finalDateText = null;
-  }
+    // 1) Combine startDate + endDate into one date string if both exist.
+    String? finalDateText;
+    if (startDate != null && startDate.isNotEmpty && endDate != null && endDate.isNotEmpty) {
+      finalDateText = '$startDate - $endDate';
+    } else if (startDate != null && startDate.isNotEmpty) {
+      finalDateText = startDate;
+    } else if (endDate != null && endDate.isNotEmpty) {
+      finalDateText = endDate;
+    } else {
+      finalDateText = null;
+    }
 
-  // 2) Icon annotation (anchor at bottom)
-  final iconImageName = (iconBytes == null) ? 'marker-15' : null;
-  final iconOptions = PointAnnotationOptions(
-    geometry: mapPoint,
-    iconSize: 5.0,
-    image: iconBytes, // if not null, overrides iconImage
-    iconImage: iconImageName,
-    iconAnchor: IconAnchor.BOTTOM,
-  );
-  final iconAnn = await _annotationManager.create(iconOptions);
-
-  // 3) Title annotation (largest text, slightly lower offset)
-  PointAnnotation? titleAnn;
-  if (title != null && title.isNotEmpty) {
-    final titleOptions = PointAnnotationOptions(
+    // 2) Icon annotation (anchor at bottom).
+    final iconImageName = (iconBytes == null) ? 'marker-15' : null;
+    final iconOptions = PointAnnotationOptions(
       geometry: mapPoint,
-      textField: title,
-      textSize: 20.0, // Title is largest
-      textAnchor: TextAnchor.BOTTOM,
-      textOffset: [0, -4.0],
-      textColor: 0xFFFFFFFF,
-      textHaloColor: 0xFF000000,
-      textHaloWidth: 1.0,
-      textHaloBlur: 0.5,
+      iconSize: 5.0,
+      image: iconBytes, // if not null, overrides iconImage
+      iconImage: iconImageName,
+      iconAnchor: IconAnchor.BOTTOM,
     );
-    titleAnn = await _annotationManager.create(titleOptions);
-  }
+    final iconAnn = await _annotationManager.create(iconOptions);
 
-  // 4) Address annotation (medium text size)
-  PointAnnotation? addressAnn;
-  if (shortAddress != null && shortAddress.isNotEmpty) {
-    final addrOptions = PointAnnotationOptions(
-      geometry: mapPoint,
-      textField: shortAddress,
-      textSize: 16.0,
-      textAnchor: TextAnchor.BOTTOM,
-      textOffset: [0, -2.8],
-      textColor: 0xFFFFFFFF,
-      textHaloColor: 0xFF000000,
-      textHaloWidth: 1.0,
-      textHaloBlur: 0.5,
-      textMaxWidth: 1000.0,
+    // 3) Title annotation (largest text).
+    // If there is no address provided, shift the title down further (closer to the marker).
+    PointAnnotation? titleAnn;
+    if (title != null && title.isNotEmpty) {
+      final double titleOffset = (shortAddress == null || shortAddress.isEmpty) ? -1.5 : -4.0;
+      final titleOptions = PointAnnotationOptions(
+        geometry: mapPoint,
+        textField: title,
+        textSize: 20.0, // Title is largest.
+        textAnchor: TextAnchor.BOTTOM,
+        textOffset: [0, titleOffset],
+        textColor: 0xFFFFFFFF,
+        textHaloColor: 0xFF000000,
+        textHaloWidth: 1.0,
+        textHaloBlur: 0.5,
+      );
+      titleAnn = await _annotationManager.create(titleOptions);
+    }
+
+    // 4) Address annotation (medium text size).
+    PointAnnotation? addressAnn;
+    if (shortAddress != null && shortAddress.isNotEmpty) {
+      final addrOptions = PointAnnotationOptions(
+        geometry: mapPoint,
+        textField: shortAddress,
+        textSize: 16.0,
+        textAnchor: TextAnchor.BOTTOM,
+        textOffset: [0, -2.8],
+        textColor: 0xFFFFFFFF,
+        textHaloColor: 0xFF000000,
+        textHaloWidth: 1.0,
+        textHaloBlur: 0.5,
+        textMaxWidth: 1000.0,
+      );
+      addressAnn = await _annotationManager.create(addrOptions);
+    }
+
+    // 5) Date annotation (medium text size) using finalDateText.
+    PointAnnotation? dateAnn;
+    if (finalDateText != null && finalDateText.isNotEmpty) {
+      final dateOptions = PointAnnotationOptions(
+        geometry: mapPoint,
+        textField: finalDateText,
+        textSize: 16.0,
+        textAnchor: TextAnchor.TOP,
+        textOffset: [0, 0.8],
+        textColor: 0xFFFFFFFF,
+        textHaloColor: 0xFF000000,
+        textHaloWidth: 1.0,
+        textHaloBlur: 0.5,
+        textMaxWidth: 1000.0, // Ensures the combined date stays on one line.
+      );
+      dateAnn = await _annotationManager.create(dateOptions);
+    }
+
+    final group = MultiAnnotationGroup(
+      iconAnnotation: iconAnn,
+      titleAnnotation: titleAnn,
+      addressAnnotation: addressAnn,
+      dateAnnotation: dateAnn,
     );
-    addressAnn = await _annotationManager.create(addrOptions);
-  }
 
-  // 5) Date annotation (medium text size) using finalDateText
-  PointAnnotation? dateAnn;
-  if (finalDateText != null && finalDateText.isNotEmpty) {
-    final dateOptions = PointAnnotationOptions(
-      geometry: mapPoint,
-      textField: finalDateText,
-      textSize: 16.0,
-      textAnchor: TextAnchor.TOP,
-      textOffset: [0, 0.8],
-      textColor: 0xFFFFFFFF,
-      textHaloColor: 0xFF000000,
-      textHaloWidth: 1.0,
-      textHaloBlur: 0.5,
-      // Add a high max width so the combined date stays on one line
-      textMaxWidth: 1000.0,
+    _multiAnnotations.add(group);
+    _annotations.addAll(group.all);
+
+    logger.i(
+      'MultiAnnotationGroup created with icon=${iconAnn.id}, '
+      'title=${titleAnn?.id}, address=${addressAnn?.id}, date=${dateAnn?.id}.'
     );
-    dateAnn = await _annotationManager.create(dateOptions);
+    return group;
   }
-
-  final group = MultiAnnotationGroup(
-    iconAnnotation: iconAnn,
-    titleAnnotation: titleAnn,
-    addressAnnotation: addressAnn,
-    dateAnnotation: dateAnn,
-  );
-
-  _multiAnnotations.add(group);
-  _annotations.addAll(group.all);
-
-  logger.i(
-    'MultiAnnotationGroup created with icon=${iconAnn.id}, '
-    'title=${titleAnn?.id}, address=${addressAnn?.id}, date=${dateAnn?.id}.'
-  );
-  return group;
-}
 
   // --------------------------------------------------------------------------
   // REMOVAL METHODS
@@ -287,54 +288,54 @@ Future<MultiAnnotationGroup> addMultiPartAnnotation({
   // LOADING FROM HIVE (EXAMPLE)
   // --------------------------------------------------------------------------
   Future<void> loadAnnotationsFromHive({String? worldId}) async {
-  logger.i('loadAnnotationsFromHive() => loading annotations' +
-      (worldId != null ? ' for worldId: $worldId' : ''));
+    logger.i('loadAnnotationsFromHive() => loading annotations' +
+        (worldId != null ? ' for worldId: $worldId' : ''));
 
-  final hiveAnnotations = await localAnnotationsRepository.getAnnotations();
+    final hiveAnnotations = await localAnnotationsRepository.getAnnotations();
 
-  final filteredAnnotations = (worldId != null)
-      ? hiveAnnotations.where((ann) => ann.worldId == worldId).toList()
-      : hiveAnnotations.toList();
+    final filteredAnnotations = (worldId != null)
+        ? hiveAnnotations.where((ann) => ann.worldId == worldId).toList()
+        : hiveAnnotations.toList();
 
-  logger.i('Total annotations from Hive: ${hiveAnnotations.length}. Filtered count: ${filteredAnnotations.length}');
+    logger.i('Total annotations from Hive: ${hiveAnnotations.length}. Filtered count: ${filteredAnnotations.length}');
 
-  for (final ann in filteredAnnotations) {
-    final lat = ann.latitude;
-    final lng = ann.longitude;
-    if (lat == null || lng == null) {
-      logger.w('Annotation ${ann.id} missing lat/lng => skip');
-      continue;
-    }
-
-    final point = Point(coordinates: Position(lng, lat));
-    Uint8List? iconBytes;
-
-    if (ann.iconName != null && ann.iconName!.isNotEmpty) {
-      try {
-        final iconData = await rootBundle.load('assets/icons/${ann.iconName}.png');
-        iconBytes = iconData.buffer.asUint8List();
-      } catch (e) {
-        logger.w('Could not load icon ${ann.iconName}, using default');
-        iconBytes = null;
+    for (final ann in filteredAnnotations) {
+      final lat = ann.latitude;
+      final lng = ann.longitude;
+      if (lat == null || lng == null) {
+        logger.w('Annotation ${ann.id} missing lat/lng => skip');
+        continue;
       }
+
+      final point = Point(coordinates: Position(lng, lat));
+      Uint8List? iconBytes;
+
+      if (ann.iconName != null && ann.iconName!.isNotEmpty) {
+        try {
+          final iconData = await rootBundle.load('assets/icons/${ann.iconName}.png');
+          iconBytes = iconData.buffer.asUint8List();
+        } catch (e) {
+          logger.w('Could not load icon ${ann.iconName}, using default');
+          iconBytes = null;
+        }
+      }
+
+      // Use ann.shortAddress instead of ann.note.
+      final shortAddr = ann.shortAddress ?? '';
+
+      final group = await addMultiPartAnnotation(
+        mapPoint: point,
+        iconBytes: iconBytes,
+        title: ann.title,
+        shortAddress: shortAddr,
+        startDate: ann.startDate,
+        endDate: ann.endDate,
+      );
+      annotationIdLinker.registerAnnotationId(group.iconAnnotation.id, ann.id);
+      logger.i('Linked Hive ID=${ann.id} to iconID=${group.iconAnnotation.id}');
     }
-
-    // **IMPORTANT UPDATE:** Use ann.shortAddress instead of ann.note.
-    final shortAddr = ann.shortAddress ?? '';
-
-    final group = await addMultiPartAnnotation(
-      mapPoint: point,
-      iconBytes: iconBytes,
-      title: ann.title,
-      shortAddress: shortAddr,
-      startDate: ann.startDate,
-      endDate: ann.endDate,
-    );
-    annotationIdLinker.registerAnnotationId(group.iconAnnotation.id, ann.id);
-    logger.i('Linked Hive ID=${ann.id} to iconID=${group.iconAnnotation.id}');
+    logger.i('Completed load from Hive');
   }
-  logger.i('Completed load from Hive');
-}
 
   // --------------------------------------------------------------------------
   // UTILS
