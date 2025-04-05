@@ -124,15 +124,16 @@ class PlacementDialogFlow {
     final bytes = await rootBundle.load('assets/icons/$_chosenIconName.png');
     final imageData = bytes.buffer.asUint8List();
 
-    // Create multi-part annotation (title, shortAddress, date)
+    // Create multi-part annotation (title, shortAddress, and dates)
     logger.i('PlacementDialogFlow: calling addMultiPartAnnotation with: '
-      'title=$_chosenTitle, shortAddress=$_chosenShortAddress, date=$_chosenStartDate');
+      'title=$_chosenTitle, shortAddress=$_chosenShortAddress, startDate=$_chosenStartDate, endDate=$_chosenEndDate');
     final multiGroup = await annotationsManager.addMultiPartAnnotation(
       mapPoint: pressPoint,
       iconBytes: imageData,
       title: _chosenTitle,
       shortAddress: _chosenShortAddress,
-      date: _chosenStartDate,
+      startDate: _chosenStartDate,
+      endDate: _chosenEndDate,
     );
     logger.i('PlacementDialogFlow: multi-part annotation => iconID=${multiGroup.iconAnnotation.id}');
 
@@ -147,9 +148,9 @@ class PlacementDialogFlow {
       iconName: _chosenIconName.isNotEmpty ? _chosenIconName : null,
       startDate: _chosenStartDate?.isNotEmpty == true ? _chosenStartDate : null,
       endDate: _chosenEndDate?.isNotEmpty == true ? _chosenEndDate : null,
+      note: null,
       latitude: latitude,
       longitude: longitude,
-      note: null,
       imagePath: null,
       shortAddress: _chosenShortAddress,
       fullAddress: _chosenFullAddress,
@@ -237,14 +238,13 @@ class PlacementDialogFlow {
         } else {
           logger.i('PlacementDialogFlow: user canceled after "change" => no annotation added');
         }
-
       } else {
         // =========== FINAL SAVE ===========
         logger.i('PlacementDialogFlow: user pressed "Save" or final action');
 
         final note     = result['note'] ?? '';
         final imagePath = result['imagePath'];
-        final endDate  = result['endDate'] ?? '';
+        final resultEndDate  = result['endDate'] ?? '';
 
         logger.i('PlacementDialogFlow: final form => note=$note, imagePath=$imagePath');
 
@@ -258,7 +258,8 @@ class PlacementDialogFlow {
           iconBytes: imageData,
           title: _chosenTitle,
           shortAddress: _chosenShortAddress,
-          date: _chosenStartDate,
+          startDate: _chosenStartDate,
+          endDate: _chosenEndDate,
         );
         logger.i('PlacementDialogFlow: multi-part annotation => iconID=${multiGroup.iconAnnotation.id}');
 
@@ -272,7 +273,7 @@ class PlacementDialogFlow {
           title: _chosenTitle?.isNotEmpty == true ? _chosenTitle : null,
           iconName: _chosenIconName.isNotEmpty ? _chosenIconName : null,
           startDate: _chosenStartDate?.isNotEmpty == true ? _chosenStartDate : null,
-          endDate: endDate.isNotEmpty ? endDate : null,
+          endDate: _chosenEndDate?.isNotEmpty == true ? _chosenEndDate : null,
           note: note.isNotEmpty ? note : null,
           latitude: latitude,
           longitude: longitude,
