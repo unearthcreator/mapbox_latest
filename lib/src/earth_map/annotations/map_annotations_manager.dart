@@ -289,54 +289,54 @@ class MapAnnotationsManager {
   // LOADING FROM HIVE (EXAMPLE)
   // --------------------------------------------------------------------------
   Future<void> loadAnnotationsFromHive({String? worldId}) async {
-    logger.i('loadAnnotationsFromHive() => loading annotations' +
-        (worldId != null ? ' for worldId: $worldId' : ''));
+  logger.i('loadAnnotationsFromHive() => loading annotations' +
+      (worldId != null ? ' for worldId: $worldId' : ''));
 
-    final hiveAnnotations = await localAnnotationsRepository.getAnnotations();
+  final hiveAnnotations = await localAnnotationsRepository.getAnnotations();
 
-    final filteredAnnotations = (worldId != null)
-        ? hiveAnnotations.where((ann) => ann.worldId == worldId).toList()
-        : hiveAnnotations.toList();
+  final filteredAnnotations = (worldId != null)
+      ? hiveAnnotations.where((ann) => ann.worldId == worldId).toList()
+      : hiveAnnotations.toList();
 
-    logger.i('Total annotations from Hive: ${hiveAnnotations.length}. Filtered count: ${filteredAnnotations.length}');
+  logger.i('Total annotations from Hive: ${hiveAnnotations.length}. Filtered count: ${filteredAnnotations.length}');
 
-    for (final ann in filteredAnnotations) {
-      final lat = ann.latitude;
-      final lng = ann.longitude;
-      if (lat == null || lng == null) {
-        logger.w('Annotation ${ann.id} missing lat/lng => skip');
-        continue;
-      }
-
-      final point = Point(coordinates: Position(lng, lat));
-      Uint8List? iconBytes;
-
-      if (ann.iconName != null && ann.iconName!.isNotEmpty) {
-        try {
-          final iconData = await rootBundle.load('assets/icons/${ann.iconName}.png');
-          iconBytes = iconData.buffer.asUint8List();
-        } catch (e) {
-          logger.w('Could not load icon ${ann.iconName}, using default');
-          iconBytes = null;
-        }
-      }
-
-      // In this example, we use ann.note as the short address.
-      final shortAddr = ann.note ?? '';
-
-      final group = await addMultiPartAnnotation(
-        mapPoint: point,
-        iconBytes: iconBytes,
-        title: ann.title,
-        shortAddress: shortAddr,
-        startDate: ann.startDate,
-        endDate: ann.endDate,
-      );
-      annotationIdLinker.registerAnnotationId(group.iconAnnotation.id, ann.id);
-      logger.i('Linked Hive ID=${ann.id} to iconID=${group.iconAnnotation.id}');
+  for (final ann in filteredAnnotations) {
+    final lat = ann.latitude;
+    final lng = ann.longitude;
+    if (lat == null || lng == null) {
+      logger.w('Annotation ${ann.id} missing lat/lng => skip');
+      continue;
     }
-    logger.i('Completed load from Hive');
+
+    final point = Point(coordinates: Position(lng, lat));
+    Uint8List? iconBytes;
+
+    if (ann.iconName != null && ann.iconName!.isNotEmpty) {
+      try {
+        final iconData = await rootBundle.load('assets/icons/${ann.iconName}.png');
+        iconBytes = iconData.buffer.asUint8List();
+      } catch (e) {
+        logger.w('Could not load icon ${ann.iconName}, using default');
+        iconBytes = null;
+      }
+    }
+
+    // **IMPORTANT UPDATE:** Use ann.shortAddress instead of ann.note.
+    final shortAddr = ann.shortAddress ?? '';
+
+    final group = await addMultiPartAnnotation(
+      mapPoint: point,
+      iconBytes: iconBytes,
+      title: ann.title,
+      shortAddress: shortAddr,
+      startDate: ann.startDate,
+      endDate: ann.endDate,
+    );
+    annotationIdLinker.registerAnnotationId(group.iconAnnotation.id, ann.id);
+    logger.i('Linked Hive ID=${ann.id} to iconID=${group.iconAnnotation.id}');
   }
+  logger.i('Completed load from Hive');
+}
 
   // --------------------------------------------------------------------------
   // UTILS
