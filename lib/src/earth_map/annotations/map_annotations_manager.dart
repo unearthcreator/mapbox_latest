@@ -89,24 +89,20 @@ class MapAnnotationsManager {
   // --------------------------------------------------------------------------
   // MULTI-ANNOTATION METHOD (Icon + Title + ShortAddress + Start/End Date)
   // --------------------------------------------------------------------------
-  Future<MultiAnnotationGroup> addMultiPartAnnotation({
+Future<MultiAnnotationGroup> addMultiPartAnnotation({
   required Point mapPoint,
   Uint8List? iconBytes,
   String? title,
   String? shortAddress,
   String? startDate,
   String? endDate,
-  String? date, // a single combined date string
+  String? date, // a single combined date string (unused here)
 }) async {
   logger.i('Adding MULTI annotation at: ${mapPoint.coordinates.lat}, ${mapPoint.coordinates.lng}');
 
-  // Determine the final date text:
+  // 1) Combine startDate + endDate into one date string if both exist
   String? finalDateText;
-  if (date != null && date.isNotEmpty) {
-    // Use the provided combined date if available.
-    finalDateText = date;
-  } else if (startDate != null && startDate.isNotEmpty && endDate != null && endDate.isNotEmpty) {
-    // Combine start and end dates.
+  if (startDate != null && startDate.isNotEmpty && endDate != null && endDate.isNotEmpty) {
     finalDateText = '$startDate - $endDate';
   } else if (startDate != null && startDate.isNotEmpty) {
     finalDateText = startDate;
@@ -116,7 +112,7 @@ class MapAnnotationsManager {
     finalDateText = null;
   }
 
-  // 2) Create the icon annotation.
+  // 2) Icon annotation (anchor at bottom)
   final iconImageName = (iconBytes == null) ? 'marker-15' : null;
   final iconOptions = PointAnnotationOptions(
     geometry: mapPoint,
@@ -127,13 +123,13 @@ class MapAnnotationsManager {
   );
   final iconAnn = await _annotationManager.create(iconOptions);
 
-  // 3) Create the title annotation if provided.
+  // 3) Title annotation (largest text, slightly lower offset)
   PointAnnotation? titleAnn;
   if (title != null && title.isNotEmpty) {
     final titleOptions = PointAnnotationOptions(
       geometry: mapPoint,
       textField: title,
-      textSize: 20.0, // Title is largest.
+      textSize: 20.0, // Title is largest
       textAnchor: TextAnchor.BOTTOM,
       textOffset: [0, -4.0],
       textColor: 0xFFFFFFFF,
@@ -144,7 +140,7 @@ class MapAnnotationsManager {
     titleAnn = await _annotationManager.create(titleOptions);
   }
 
-  // 4) Create the address annotation if provided.
+  // 4) Address annotation (medium text size)
   PointAnnotation? addressAnn;
   if (shortAddress != null && shortAddress.isNotEmpty) {
     final addrOptions = PointAnnotationOptions(
@@ -162,7 +158,7 @@ class MapAnnotationsManager {
     addressAnn = await _annotationManager.create(addrOptions);
   }
 
-  // 5) Create the date annotation using finalDateText if available.
+  // 5) Date annotation (medium text size) using finalDateText
   PointAnnotation? dateAnn;
   if (finalDateText != null && finalDateText.isNotEmpty) {
     final dateOptions = PointAnnotationOptions(
@@ -175,6 +171,8 @@ class MapAnnotationsManager {
       textHaloColor: 0xFF000000,
       textHaloWidth: 1.0,
       textHaloBlur: 0.5,
+      // Add a high max width so the combined date stays on one line
+      textMaxWidth: 1000.0,
     );
     dateAnn = await _annotationManager.create(dateOptions);
   }
