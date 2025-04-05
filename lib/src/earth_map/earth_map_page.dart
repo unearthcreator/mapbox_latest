@@ -67,12 +67,8 @@ class EarthMapPageState extends State<EarthMapPage> {
   void initState() {
     super.initState();
     logger.i('Initializing EarthMapPage');
-    // Check and log the worldId
-    if (widget.worldConfig.id == null || widget.worldConfig.id.isEmpty) {
-      logger.e('Error: worldConfig.id is null or empty!');
-    } else {
-      logger.i('EarthMapPage worldId: ${widget.worldConfig.id}');
-    }
+    // Log the current world ID to ensure it is passed correctly.
+    logger.i('EarthMapPage worldId: ${widget.worldConfig.id}');
   }
 
   @override
@@ -94,7 +90,7 @@ class EarthMapPageState extends State<EarthMapPage> {
       logger.i('Starting map initialization');
       _mapboxMap = mapboxMap;
 
-      // 1) Create the underlying Mapbox annotation manager
+      // 1) Create the underlying Mapbox annotation manager.
       final annotationManager = await mapboxMap.annotations
           .createPointAnnotationManager()
           .onError((error, stackTrace) {
@@ -103,20 +99,20 @@ class EarthMapPageState extends State<EarthMapPage> {
         throw Exception('Failed to initialize map annotations');
       });
 
-      // 2) Create LocalAnnotationsRepository
+      // 2) Create LocalAnnotationsRepository.
       _localRepo = LocalAnnotationsRepository();
 
-      // 3) Create a single shared AnnotationIdLinker instance
+      // 3) Create a single shared AnnotationIdLinker instance.
       final annotationIdLinker = AnnotationIdLinker();
 
-      // 4) Create our MapAnnotationsManager
+      // 4) Create our MapAnnotationsManager.
       _annotationsManager = MapAnnotationsManager(
         annotationManager,
         annotationIdLinker: annotationIdLinker,
         localAnnotationsRepository: _localRepo,
       );
 
-      // 5) Create the gesture handler
+      // 5) Create the gesture handler.
       _gestureHandler = MapGestureHandler(
         mapboxMap: _mapboxMap,
         annotationsManager: _annotationsManager,
@@ -132,7 +128,7 @@ class EarthMapPageState extends State<EarthMapPage> {
         onAnnotationReverted: _handleAnnotationReverted,
       );
 
-      // 6) Initialize your AnnotationActions
+      // 6) Initialize your AnnotationActions.
       _annotationActions = AnnotationActions(
         localRepo: _localRepo,
         annotationsManager: _annotationsManager,
@@ -144,6 +140,7 @@ class EarthMapPageState extends State<EarthMapPage> {
       // Once map is ready, load saved Hive annotations using the current worldId.
       if (mounted) {
         setState(() => _isMapReady = true);
+        logger.i('Loading annotations for worldId: ${widget.worldConfig.id}');
         await _annotationsManager.loadAnnotationsFromHive(
           worldId: widget.worldConfig.id,
         );
